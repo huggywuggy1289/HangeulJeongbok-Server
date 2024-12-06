@@ -39,7 +39,7 @@ class QuizListAPIView(APIView):
             # 새로운 퀴즈 세션을 초기화
             quiz_ids = list(Quiz.objects.values_list('id', flat=True))
             random.shuffle(quiz_ids)  # 퀴즈 순서를 랜덤으로 섞기
-            for quiz_id in quiz_ids:
+            for quiz_id in quiz_ids[:10]:
                 QuizHistory.objects.create(user=user, quiz_id=quiz_id, selected_option=-1, is_correct=None)
 
         # 진행 중인 퀴즈를 반환
@@ -90,7 +90,7 @@ class QuizListAPIView(APIView):
                     'result': "X" if not is_correct else "O",
                     'message': "All quizzes completed. Proceed to results.",
                     'final_score': final_score,
-                    'total_score': total_questions,
+                    'total_score': total_questions*10,
                 }, status=status.HTTP_200_OK)
 
             next_quiz = next_quiz_history.quiz
@@ -132,7 +132,7 @@ class QuizScoreAPIView(APIView):
 
         return Response({
             "score": correct_answers * 10,  # 예: 문제당 10점
-            "total_score": total_questions * 10,
+            "total_score": 100,
             "correct_answers": correct_answers,
             "incorrect_answers": incorrect_answers,
             "results": results

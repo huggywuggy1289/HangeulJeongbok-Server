@@ -7,20 +7,27 @@ class QuizSerializer(serializers.ModelSerializer):
         model = Quiz
         fields = ['id', 'question', 'options']
 
+    def validate_options(self, value):
+        """
+        options 필드가 JSON 배열인지 확인
+        """
+        if not isinstance(value, list):
+            raise serializers.ValidationError("`options` 필드는 JSON 배열이어야 합니다.")
+        return value
+
     def to_representation(self, instance):
+        """
+        데이터를 반환할 때만 options 필드의 형식을 변경
+        """
         representation = super().to_representation(instance)
         options = representation['options']
 
-        # options 필드 유효성 검사
-        if not isinstance(options, list):
-            raise serializers.ValidationError("`options` 필드는 JSON 배열이어야 합니다.")
-
         # 쉼표 기준으로 인덱스 값 추가(python 내장함수 enumerate사용)
-        formatted_options = [
-            f"{idx + 1}. {option}" for idx, option in enumerate(options)
-        ]
-
-        representation['options'] = formatted_options
+        if isinstance(options, list):
+            formatted_options = [
+                f"{idx + 1}. {option}" for idx, option in enumerate(options)
+            ]
+            representation['options'] = formatted_options
         return representation
 
 # 사용자의 답안이 맞는지 확인하는 답안제출 시리얼라이저
