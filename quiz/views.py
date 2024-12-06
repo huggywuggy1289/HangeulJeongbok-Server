@@ -36,10 +36,10 @@ class QuizListAPIView(APIView):
         quiz_history = QuizHistory.objects.filter(user=user, is_correct=None)
 
         if not quiz_history.exists():
-            # 새로운 퀴즈 세션을 초기화
-            quiz_ids = list(Quiz.objects.values_list('id', flat=True))
+            # 새로운 퀴즈 세션을 초기화 (10문제씩 푼다)
+            quiz_ids = list(Quiz.objects.values_list('id', flat=True))[:10]  # 10문제만
             random.shuffle(quiz_ids)  # 퀴즈 순서를 랜덤으로 섞기
-            for quiz_id in quiz_ids[:10]:
+            for quiz_id in quiz_ids:
                 QuizHistory.objects.create(user=user, quiz_id=quiz_id, selected_option=-1, is_correct=None)
 
         # 진행 중인 퀴즈를 반환
@@ -49,14 +49,20 @@ class QuizListAPIView(APIView):
             serializer = QuizSerializer(quiz)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            # 모든 퀴즈가 완료되었으면 결과 반환
+            # 10문제가 다 풀렸으면 점수 계산 후 반환
             correct_answer = QuizHistory.objects.filter(user=user, is_correct=True).count()
-            final_score = correct_answer*5
-            total_score = 100
+            final_score = correct_answer * 10  # 문제당 10점
+            total_score = 100  # 총점
+
+            # 점수 저장 (선택사항: 퀴즈 기록에 저장하거나 별도의 테이블에 저장 가능)
+            QuizHistory.objects.filter(user=user, completed_date=None).update(completed_date=now().date())
+
             return Response({
-                'message': "All quizzes completed.",
+                'message': "All quizzes completed. Proceed to results.",
                 'final_score': final_score,
                 'total_score': total_score,
+                'correct_answers': correct_answer,
+                'incorrect_answers': 10 - correct_answer  # 10문제에서 맞힌 것 제외
             }, status=status.HTTP_200_OK)
 
     def post(self, request):
@@ -81,18 +87,14 @@ class QuizListAPIView(APIView):
             next_quiz_history = QuizHistory.objects.filter(user=user, is_correct=None).first()
 
             if not next_quiz_history:
-                final_score = QuizHistory.objects.filter(user=user, is_correct=True).count()
-                total_questions = QuizHistory.objects.filter(user=user).count()
-                # 날짜 기록 추가
                 QuizHistory.objects.filter(user=user, completed_date=None).update(completed_date=now().date())
 
                 return Response({
                     'result': "X" if not is_correct else "O",
-                    'message': "All quizzes completed. Proceed to results.",
-                    'final_score': final_score,
-                    'total_score': total_questions*10,
+                    'message': "All quizzes completed. Proceed to results."
                 }, status=status.HTTP_200_OK)
 
+            # 다음 퀴즈를 반환
             next_quiz = next_quiz_history.quiz
             next_quiz_serializer = QuizSerializer(next_quiz)
             return Response({
@@ -112,12 +114,17 @@ class QuizAnswerAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class QuizScoreAPIView(APIView):
+class QuizScoreAPIView(APIView): 
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        quiz_histories = QuizHistory.objects.filter(user=user)
+        
+        # 가장 최근 퀴즈 세션을 가져옴 (10문제씩 푼 세션)
+        # `completed_date`나 세션별 구분자를 사용해 구분할 수 있음
+        quiz_histories = QuizHistory.objects.filter(user=user, completed_date__isnull=False)
+        
+        # 마지막 세션 점수 계산
         total_questions = quiz_histories.count()
         correct_answers = quiz_histories.filter(is_correct=True).count()
         incorrect_answers = quiz_histories.filter(is_correct=False).count()
@@ -130,14 +137,17 @@ class QuizScoreAPIView(APIView):
                 "is_correct": history.is_correct,
             })
 
+        # 점수 계산 (각 문제당 10점)
+        score = correct_answers * 10
+
+        # 마지막 퀴즈 세션 점수 반환
         return Response({
-            "score": correct_answers * 10,  # 예: 문제당 10점
-            "total_score": 100,
+            "score": score,  # 이번 10문제 세션 점수
+            "total_score": 100,  # 전체 만점
             "correct_answers": correct_answers,
             "incorrect_answers": incorrect_answers,
             "results": results
         })
-    
 
 class IncorrectQuizAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -156,18 +166,6 @@ class IncorrectQuizAPIView(APIView):
             })
 
         return Response({"incorrect_questions": incorrect_questions})
-    
-
-class ContinueQuizAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        # 클라이언트에서 continue 값 전달
-        continue_quiz = request.data.get("continue", False)
-        if continue_quiz:
-            return Response({"message": "퀴즈를 계속 진행합니다."}, status=status.HTTP_200_OK)
-        return Response({"message": "퀴즈를 종료합니다."}, status=status.HTTP_200_OK)
-    
 
 class QuizHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
