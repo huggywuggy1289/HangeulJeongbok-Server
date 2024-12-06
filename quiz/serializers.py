@@ -11,6 +11,10 @@ class QuizSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         options = representation['options']
 
+        # options 필드 유효성 검사
+        if not isinstance(options, list):
+            raise serializers.ValidationError("`options` 필드는 JSON 배열이어야 합니다.")
+
         # 쉼표 기준으로 인덱스 값 추가(python 내장함수 enumerate사용)
         formatted_options = [
             f"{idx + 1}. {option}" for idx, option in enumerate(options)

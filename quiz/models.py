@@ -6,7 +6,7 @@ from django.utils.timezone import now
 # 퀴즈 내용 데이터베이스에 저장(문제, 선택지, 답안)
 class Quiz(models.Model):
     question = models.TextField()
-    options = models.TextField()  # JSON 데이터를 문자열로 저장
+    options = models.JSONField(null=True)  # JSON 데이터를 저장할 수 있는 필드
     answer = models.IntegerField()
 
     def set_options(self, data):
