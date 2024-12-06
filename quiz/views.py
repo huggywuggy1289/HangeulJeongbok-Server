@@ -79,11 +79,6 @@ class QuizListAPIView(APIView):
 
             # 다음 퀴즈로 이동
             next_quiz_history = QuizHistory.objects.filter(user=user, is_correct=None).first()
-            
-            # try:
-            #     user_info = User.objects.get(sp_user_id = user_id)
-            # except User.DoesNotExist:
-            #     user_info = None
 
             if not next_quiz_history:
                 final_score = QuizHistory.objects.filter(user=user, is_correct=True).count()
