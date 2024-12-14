@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-ah5o(0z42hh$*_x=pns7c72py%4)7#5e!_lw58a&5c6^hk(&dr
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+Allowed_Hosts=['poksin-webcam.site']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
