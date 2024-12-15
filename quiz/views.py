@@ -232,7 +232,7 @@ class QuizDetailAPIView(APIView):
             return Response({
                 "id": history.id,
                 "question": quiz.question,
-                "options": quiz.get_options(),
+                "options_list": quiz.options,
                 "rating": history.rating if history.rating else None  # 별점이 없으면 null 반환
             }, status=status.HTTP_200_OK)
         except QuizHistory.DoesNotExist:
