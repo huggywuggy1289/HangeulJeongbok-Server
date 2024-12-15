@@ -142,9 +142,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'users.User'
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # 로컬 개발 환경에서의 프론트엔드 URL
-#     "https://yourfrontend.com",  # 실제 프론트엔드 URL
-# ]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # 로컬 개발 환경에서의 프론트엔드 URL
+]
