@@ -114,40 +114,41 @@ class QuizAnswerAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-class QuizScoreAPIView(APIView): 
+class QuizScoreAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        
-        # 가장 최근 퀴즈 세션을 가져옴 (10문제씩 푼 세션)
-        # `completed_date`나 세션별 구분자를 사용해 구분할 수 있음
-        quiz_histories = QuizHistory.objects.filter(user=user, completed_date__isnull=False)
-        
-        # 마지막 세션 점수 계산
-        total_questions = quiz_histories.count()
-        correct_answers = quiz_histories.filter(is_correct=True).count()
-        incorrect_answers = quiz_histories.filter(is_correct=False).count()
 
+        # 방금 완료한 세션의 퀴즈 이력만 가져오기
+        latest_session = QuizHistory.objects.filter(user=user, completed_date=now().date())
+
+        if not latest_session.exists():
+            return Response({"error": "No recent quiz session found."}, status=404)
+
+        # 점수 계산
+        total_questions = latest_session.count()
+        correct_answers = latest_session.filter(is_correct=True).count()
+        incorrect_answers = latest_session.filter(is_correct=False).count()
+        score = correct_answers * 10  # 문제당 10점
+
+        # 각 문제의 결과 (O/X) 포함하여 반환
         results = []
-        for history in quiz_histories:
+        for history in latest_session:
             results.append({
                 "question": history.quiz.question,
                 "selected_option": history.selected_option,
-                "is_correct": history.is_correct,
+                "correct_answer": history.quiz.answer + 1,  # 정답은 1-based
+                "result": "O" if history.is_correct else "X",
             })
 
-        # 점수 계산 (각 문제당 10점)
-        score = correct_answers * 10
-
-        # 마지막 퀴즈 세션 점수 반환
         return Response({
-            "score": score,  # 이번 10문제 세션 점수
-            "total_score": 100,  # 전체 만점
+            "score": score,  # 이번 세션 점수
+            "total_score": total_questions * 10,  # 만점
             "correct_answers": correct_answers,
             "incorrect_answers": incorrect_answers,
-            "results": results
-        })
+            "results": results  # 각 문제 결과
+        }, status=200)
 
 class IncorrectQuizAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -174,12 +175,11 @@ class QuizHistoryAPIView(APIView):
         user = request.user
         history = (
             QuizHistory.objects.filter(user=user)
-            .values("completed_date")
+            .values("id", "completed_date")  # id 값을 추가
             .annotate(score=Sum(Case(When(is_correct=True, then=10), default=0, output_field=IntegerField())))
             .order_by("-completed_date")
         )
         return Response({"history": list(history)}, status=200)
-    
 
 class IncorrectHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
@@ -219,3 +219,21 @@ class RateQuizAPIView(APIView):
             return Response({"message": "Rating saved successfully"}, status=200)
         except QuizHistory.DoesNotExist:
             return Response({"error": "Quiz history not found"}, status=404)
+
+# 퀴즈 정복 데이터 api
+class QuizDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, history_id):
+        try:
+            history = QuizHistory.objects.get(id=history_id, user=request.user)
+            quiz = history.quiz
+
+            return Response({
+                "id": history.id,
+                "question": quiz.question,
+                "options": quiz.get_options(),
+                "rating": history.rating if history.rating else None  # 별점이 없으면 null 반환
+            }, status=status.HTTP_200_OK)
+        except QuizHistory.DoesNotExist:
+            return Response({"error": "Quiz history not found"}, status=status.HTTP_404_NOT_FOUND)

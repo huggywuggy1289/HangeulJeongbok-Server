@@ -8,4 +8,5 @@ urlpatterns = [
     path('history/', QuizHistoryAPIView.as_view(), name='quiz-history'),
     path('history/<date>/incorrect/', IncorrectHistoryAPIView.as_view(), name='quiz-history-incorrect'), #date YYYY-MM-DD
     path('history/<int:history_id>/rate/', RateQuizAPIView.as_view(), name='quiz-rate'),
+    path('history/<int:history_id>/', QuizDetailAPIView.as_view(), name='quiz-detail'),
 ]
