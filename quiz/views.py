@@ -113,61 +113,81 @@ class QuizAnswerAPIView(APIView):
             return Response({'result':'O' if is_correct else 'X'}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
-
 class QuizScoreAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
 
-        # 방금 완료한 세션의 퀴즈 이력만 가져오기
-        latest_session = QuizHistory.objects.filter(user=user, completed_date=now().date())
+        # 가장 최근 완료된 세션 날짜 가져오기
+        latest_date = QuizHistory.objects.filter(user=user, completed_date__isnull=False) \
+                                        .order_by('-completed_date') \
+                                        .values_list('completed_date', flat=True) \
+                                        .first()
 
-        if not latest_session.exists():
-            return Response({"error": "No recent quiz session found."}, status=404)
+        if not latest_date:
+            return Response({"message": "No recently completed quiz session found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # 점수 계산
-        total_questions = latest_session.count()
-        correct_answers = latest_session.filter(is_correct=True).count()
-        incorrect_answers = latest_session.filter(is_correct=False).count()
-        score = correct_answers * 10  # 문제당 10점
+        # 가장 최근 세션의 문제 이력 가져오기
+        latest_quiz_histories = QuizHistory.objects.filter(user=user, completed_date=latest_date)
+        
+        total_questions = latest_quiz_histories.count()
+        correct_answers = latest_quiz_histories.filter(is_correct=True).count()
+        incorrect_answers = latest_quiz_histories.filter(is_correct=False).count()
 
-        # 각 문제의 결과 (O/X) 포함하여 반환
         results = []
-        for history in latest_session:
+        for history in latest_quiz_histories:
             results.append({
                 "question": history.quiz.question,
                 "selected_option": history.selected_option,
-                "correct_answer": history.quiz.answer + 1,  # 정답은 1-based
-                "result": "O" if history.is_correct else "X",
+                "is_correct": history.is_correct,
             })
 
         return Response({
-            "score": score,  # 이번 세션 점수
-            "total_score": total_questions * 10,  # 만점
+            "latest_session_date": latest_date,
+            "score": correct_answers * 5,  # 예: 문제당 5점
+            "total_score": total_questions * 5,  # 총 점수 계산
             "correct_answers": correct_answers,
             "incorrect_answers": incorrect_answers,
-            "results": results  # 각 문제 결과
-        }, status=200)
+            "results": results
+        }, status=status.HTTP_200_OK)
 
+# 최근 틀린문제 반환
 class IncorrectQuizAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
-        incorrect_histories = QuizHistory.objects.filter(user=user, is_correct=False)
 
-        incorrect_questions = []
-        for history in incorrect_histories:
-            incorrect_questions.append({
+        # 가장 최근에 완료된 세션 날짜 가져오기
+        latest_date = QuizHistory.objects.filter(user=user, completed_date__isnull=False) \
+                                        .order_by('-completed_date') \
+                                        .values_list('completed_date', flat=True) \
+                                        .first()
+
+        if not latest_date:
+            return Response({"message": "No recently completed quiz session found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 가장 최근 세션에서 틀린 문제만 가져오기
+        incorrect_histories = QuizHistory.objects.filter(
+            user=user,
+            completed_date=latest_date,
+            is_correct=False
+        )
+
+        incorrect_questions = [
+            {
                 "question": history.quiz.question,
-                "correct_answer": history.quiz.answer + 1,  # 정답은 1-based로 반환
-                "selected_option": history.selected_option,
+                "correct_answer": history.quiz.answer + 1,  # 1-based 정답
+                "selected_option": history.selected_option,  # 사용자가 선택한 답
                 "options": history.quiz.get_options()
-            })
+            }
+            for history in incorrect_histories
+        ]
 
-        return Response({"incorrect_questions": incorrect_questions})
-
+        return Response({"incorrect_questions": incorrect_questions}, status=status.HTTP_200_OK)
+    
+# 그동안 퀴즈를 풀었던 날짜와 점수, 퀴즈아이디 반환 (사용자의 퀴즈 이력)
 class QuizHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -175,12 +195,13 @@ class QuizHistoryAPIView(APIView):
         user = request.user
         history = (
             QuizHistory.objects.filter(user=user)
-            .values("id", "completed_date")  # id 값을 추가
+            .values("id", "completed_date")
             .annotate(score=Sum(Case(When(is_correct=True, then=10), default=0, output_field=IntegerField())))
             .order_by("-completed_date")
         )
         return Response({"history": list(history)}, status=200)
 
+# 특정 날짜의 틀린 문제를 반환
 class IncorrectHistoryAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -192,17 +213,20 @@ class IncorrectHistoryAPIView(APIView):
             return Response({"error": "Invalid date format"}, status=400)
 
         incorrect_histories = QuizHistory.objects.filter(user=user, completed_date=completed_date, is_correct=False)
-        incorrect_questions = [
-            {
+        incorrect_questions = []
+
+        for history in incorrect_histories:
+            options = history.quiz.get_options()
+            print("get_options 반환값:", options)  # 반환값 출력
+            incorrect_questions.append({
                 "question": history.quiz.question,
                 "correct_answer": history.quiz.answer + 1,
-                "options": history.quiz.get_options(),
-            }
-            for history in incorrect_histories
-        ]
-        return Response({"incorrect_questions": incorrect_questions}, status=200)
-    
+                "options": options,
+            })
 
+        return Response({"incorrect_questions": incorrect_questions}, status=200)
+
+# 별점주기
 class RateQuizAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -220,20 +244,40 @@ class RateQuizAPIView(APIView):
         except QuizHistory.DoesNotExist:
             return Response({"error": "Quiz history not found"}, status=404)
 
-# 퀴즈 정복 데이터 api
+# 전체 오답 문제 데이터와 별점이 모두 포함된 데이터를 가져오기 위한 API
 class QuizDetailAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, history_id):
+    def get(self, request):
         try:
-            history = QuizHistory.objects.get(id=history_id, user=request.user)
-            quiz = history.quiz
+            user = request.user
 
-            return Response({
-                "id": history.id,
-                "question": quiz.question,
-                "options_list": quiz.options,
-                "rating": history.rating if history.rating else None  # 별점이 없으면 null 반환
-            }, status=status.HTTP_200_OK)
-        except QuizHistory.DoesNotExist:
-            return Response({"error": "Quiz history not found"}, status=status.HTTP_404_NOT_FOUND)
+            # 해당 사용자의 모든 오답 퀴즈 기록 조회
+            incorrect_histories = QuizHistory.objects.filter(
+                user=user, is_correct=False
+            )
+
+            if not incorrect_histories.exists():
+                return Response(
+                    {"message": "No incorrect questions found."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # 오답 기록 데이터 정리
+            incorrect_questions = [
+                {
+                    "question": history.quiz.question,
+                    "correct_answer": history.quiz.answer + 1,  # 1-based 정답
+                    "selected_option": history.selected_option,  # 사용자가 선택한 답
+                    "options_list": history.quiz.options,
+                    "rating": history.rating if history.rating else None  # 별점이 없으면 null
+                }
+                for history in incorrect_histories
+            ]
+
+            return Response(
+                {"incorrect_questions": incorrect_questions},
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

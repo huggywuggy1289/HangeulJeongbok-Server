@@ -10,10 +10,10 @@ class Quiz(models.Model):
     answer = models.IntegerField()
 
     def set_options(self, data):
-        self.options = json.dumps(data)
+        self.options = data
 
     def get_options(self):
-        return json.loads(self.options)
+        return self.options
     
     def __str__(self):
         return self.question
