@@ -49,7 +49,6 @@ class QuizListAPIView(APIView):
             serializer = QuizSerializer(quiz)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            # 10문제가 다 풀렸으면 점수 계산 후 반환
             correct_answer = QuizHistory.objects.filter(user=user, is_correct=True).count()
             final_score = correct_answer * 10  # 문제당 10점
             total_score = 100  # 총점
@@ -87,11 +86,22 @@ class QuizListAPIView(APIView):
             next_quiz_history = QuizHistory.objects.filter(user=user, is_correct=None).first()
 
             if not next_quiz_history:
+                session_id = quiz_history.session_id  # 현재 세션 ID
                 QuizHistory.objects.filter(user=user, completed_date=None).update(completed_date=now().date())
 
+                # 점수 계산
+                correct_answers = QuizHistory.objects.filter(user=user, is_correct=True, session_id=session_id).count()
+                total_questions = 10  # 한 회차에 푸는 문제 수
+                final_score = correct_answers * 10  # 문제당 10점
+
                 return Response({
-                    'result': "X" if not is_correct else "O",
-                    'message': "All quizzes completed. Proceed to results."
+                    'result': "O" if is_correct else "X",
+                    'message': "All quizzes completed. Proceed to results.",
+                    'session_id': str(session_id),
+                    'final_score': final_score,
+                    'total_score': 100,
+                    'correct_answers': correct_answers,
+                    'incorrect_answers': total_questions - correct_answers
                 }, status=status.HTTP_200_OK)
 
             # 다음 퀴즈를 반환

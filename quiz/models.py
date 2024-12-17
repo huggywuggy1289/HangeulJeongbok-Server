@@ -1,6 +1,7 @@
 from django.conf import settings  # settings에서 AUTH_USER_MODEL을 가져옵니다.
 from django.db import models
 import json
+import uuid
 from django.utils.timezone import now
 
 # 퀴즈 내용 데이터베이스에 저장(문제, 선택지, 답안)
@@ -26,6 +27,7 @@ class QuizHistory(models.Model):
     is_correct = models.BooleanField(null=True, default=None)
     completed_date = models.DateField(null=True, default=None)  # 퀴즈 완료 날짜
     rating = models.IntegerField(null=True, blank=True)  # 별점 저장 (1~5 사이)
+    session_id = models.UUIDField(default=uuid.uuid4, editable=False)
     
     def __str__(self):
-        return f"{self.user.username} - {self.quiz.id} - {self.is_correct}"
+        return f"{self.user.username} - {self.quiz.id} - {self.is_correct} - {self.session_id}"
