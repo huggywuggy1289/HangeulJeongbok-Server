@@ -291,31 +291,48 @@ class QuizDetailAPIView(APIView):
         try:
             user = request.user
 
-            # 해당 사용자의 모든 오답 퀴즈 기록 조회
-            incorrect_histories = QuizHistory.objects.filter(
+            # 사용자별 세션 ID를 기준으로 그룹화된 오답 기록 가져오기
+            session_histories = QuizHistory.objects.filter(
                 user=user, is_correct=False
-            )
+            ).values('session_id').distinct()
 
-            if not incorrect_histories.exists():
+            if not session_histories.exists():
                 return Response(
                     {"message": "No incorrect questions found."},
                     status=status.HTTP_404_NOT_FOUND
                 )
 
-            # 오답 기록 데이터 정리
-            incorrect_questions = [
-                {
-                    "question": history.quiz.question,
-                    "correct_answer": history.quiz.answer + 1,  # 1-based 정답
-                    "selected_option": history.selected_option,  # 사용자가 선택한 답
-                    "options_list": history.quiz.options,
-                    "rating": history.rating if history.rating else None  # 별점이 없으면 null
-                }
-                for history in incorrect_histories
-            ]
+            # 세션별 데이터 정리
+            sessions_data = []
+            for session in session_histories:
+                session_id = session['session_id']
+
+                # 해당 세션의 오답 문제 가져오기
+                incorrect_histories = QuizHistory.objects.filter(
+                    user=user, session_id=session_id, is_correct=False
+                )
+
+                # 오답 문제 데이터 구성
+                incorrect_questions = [
+                    {
+                        "history_id": history.id,  # 기록 고유 ID
+                        "question": history.quiz.question,
+                        "correct_answer": history.quiz.answer + 1,  # 1-based 정답
+                        "selected_option": history.selected_option,  # 사용자가 선택한 답
+                        "options_list": history.quiz.options,
+                        "rating": history.rating if history.rating else None  # 별점 없으면 null
+                    }
+                    for history in incorrect_histories
+                ]
+
+                # 세션 데이터 구성
+                sessions_data.append({
+                    "session_id": session_id,  # 세션 ID
+                    "incorrect_questions": incorrect_questions
+                })
 
             return Response(
-                {"incorrect_questions": incorrect_questions},
+                {"sessions": sessions_data},
                 status=status.HTTP_200_OK
             )
         except Exception as e:
