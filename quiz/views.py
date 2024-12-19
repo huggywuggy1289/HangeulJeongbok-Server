@@ -203,13 +203,25 @@ class QuizHistoryAPIView(APIView):
 
     def get(self, request):
         user = request.user
+        # completed_date 기준으로 그룹화
         history = (
             QuizHistory.objects.filter(user=user)
-            .values("id", "completed_date")
-            .annotate(score=Sum(Case(When(is_correct=True, then=10), default=0, output_field=IntegerField())))
+            .values("completed_date")  # 날짜별로 그룹화
+            .annotate(
+                score=Sum(Case(When(is_correct=True, then=10), default=0, output_field=IntegerField()))
+            )
             .order_by("-completed_date")
         )
-        return Response({"history": list(history)}, status=200)
+        # 결과 변환
+        result = [
+            {
+                "id": f"{user.id}-{item['completed_date']}",  # 날짜별 고유 ID 생성
+                "completed_date": item["completed_date"],
+                "score": item["score"],
+            }
+            for item in history
+        ]
+        return Response({"history": result}, status=200)
 
 # 특정 날짜의 틀린 문제를 반환
 class IncorrectHistoryAPIView(APIView):
