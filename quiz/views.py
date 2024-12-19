@@ -203,24 +203,40 @@ class QuizHistoryAPIView(APIView):
 
     def get(self, request):
         user = request.user
-        # completed_date 기준으로 그룹화
+
+        # 퀴즈 기록 가져오기
         history = (
             QuizHistory.objects.filter(user=user)
-            .values("completed_date")  # 날짜별로 그룹화
-            .annotate(
-                score=Sum(Case(When(is_correct=True, then=10), default=0, output_field=IntegerField()))
-            )
-            .order_by("-completed_date")
+            .order_by("-completed_date", "-id")  # 날짜와 id 기준으로 정렬
         )
+
+        # 10문제씩 묶기
+        quiz_batches = []
+        batch = []
+        for quiz in history:
+            batch.append(quiz)
+            if len(batch) == 10:  # 10문제가 모이면 하나의 묶음 생성
+                quiz_batches.append(batch)
+                batch = []
+        
+        # 남은 문제 처리
+        if batch:
+            quiz_batches.append(batch)
+
         # 결과 변환
-        result = [
-            {
-                "id": f"{user.id}-{item['completed_date']}",  # 날짜별 고유 ID 생성
-                "completed_date": item["completed_date"],
-                "score": item["score"],
-            }
-            for item in history
-        ]
+        result = []
+        for i, batch in enumerate(quiz_batches):
+            total_score = sum(
+                10 if quiz.is_correct else 0 for quiz in batch
+            )
+            completed_date = batch[0].completed_date  # 묶음의 첫 번째 퀴즈 날짜
+            # ID를 퀴즈 이력의 고유 ID 값으로 설정
+            result.append({
+                "id": batch[0].id,  # 각 배치의 첫 번째 퀴즈의 id 사용
+                "completed_date": completed_date,
+                "score": total_score,
+            })
+
         return Response({"history": result}, status=200)
 
 # 특정 날짜의 틀린 문제를 반환
@@ -259,6 +275,7 @@ class RateQuizAPIView(APIView):
             return Response({"error": "Rating must be between 1 and 5"}, status=400)
 
         try:
+            # history_id는 QuizHistory의 id 값으로 URL에서 전달됨
             history = QuizHistory.objects.get(id=history_id, user=request.user)
             history.rating = rating
             history.save()
