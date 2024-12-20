@@ -258,7 +258,7 @@ class IncorrectHistoryAPIView(APIView):
             print("get_options 반환값:", options)  # 반환값 출력
             incorrect_questions.append({
                 "question": history.quiz.question,
-                "correct_answer": history.quiz.answer + 1,
+                "correct_answer": history.quiz.answer, # 원래 +1있었음.
                 "options": options,
             })
 
