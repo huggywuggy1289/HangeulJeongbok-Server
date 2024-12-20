@@ -188,7 +188,7 @@ class IncorrectQuizAPIView(APIView):
         incorrect_questions = [
             {
                 "question": history.quiz.question,
-                "correct_answer": history.quiz.answer + 1,  # 1-based 정답
+                "correct_answer": history.quiz.answer,  # 1-based 정답
                 "selected_option": history.selected_option,  # 사용자가 선택한 답
                 "options": history.quiz.get_options()
             }
@@ -317,7 +317,7 @@ class QuizDetailAPIView(APIView):
                     {
                         "history_id": history.id,  # 기록 고유 ID
                         "question": history.quiz.question,
-                        "correct_answer": history.quiz.answer + 1,  # 1-based 정답
+                        "correct_answer": history.quiz.answer,  # 1-based 정답
                         "selected_option": history.selected_option,  # 사용자가 선택한 답
                         "options_list": history.quiz.options,
                         "rating": history.rating if history.rating else None  # 별점 없으면 null
