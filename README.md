@@ -1,6 +1,6 @@
 # HangeulJeongbok-Server
 
-### 🚀 커밋 규칙 (Commit Convention)
+## 🚀 커밋 규칙 (Commit Convention)
 
 | **커밋 유형**      | **설명**                                                  |
 |-------------------|---------------------------------------------------------|
@@ -18,6 +18,5 @@
 | `!BREAKING CHANGE`| 커다란 API 변경의 경우                                    |
 | `!HOTFIX`         | 급하게 치명적인 버그를 고쳐야 하는 경우                   |
 
-<br>
-
-<img width="1386" src="https://github.com/user-attachments/assets/67452330-f2fe-4433-ac9e-1adf4ed91837"
+---
+## 🛠️ 사용 언어, 개발환경, 개발 툴
