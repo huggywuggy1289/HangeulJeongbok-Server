@@ -40,14 +40,13 @@
 <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=React&logoColor=black"/>
 
 <br>
-<p>
+
 ![3](https://github.com/user-attachments/assets/6ebcfeae-984e-40af-9380-26544b5c95a9)
-<p>
+
 ![4](https://github.com/user-attachments/assets/a79ab64a-1ec0-417a-a09c-ff414cd00be9)
 
-<p>
+
 ![5](https://github.com/user-attachments/assets/1b2ed5e9-1aed-4f57-a8ff-252920631b8f)
 
-<p>
 ![6](https://github.com/user-attachments/assets/22ab6cec-c26c-477a-974f-7fdd08c96ddd)
 
