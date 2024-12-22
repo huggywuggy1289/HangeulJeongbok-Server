@@ -30,7 +30,8 @@
 
 <h1>👨‍💻 Role & Contribution</h1>
 <hr>
-![2](https://github.com/user-attachments/assets/13f4d64d-5a7c-48fa-a208-5309986c0d58)
+
+![2](https://github.com/user-attachments/assets/5bb86bed-be00-444b-b2f7-37fd7034aaa3)
 
 ## 🛠️ 사용 언어, 개발환경, 개발 툴
 
