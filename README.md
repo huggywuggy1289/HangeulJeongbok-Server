@@ -26,9 +26,7 @@
 
 <h1>👨‍💻 Role & Contribution</h1>
 <hr>
-
-<p>![image](https://github.com/user-attachments/assets/cca9440c-ed63-417f-b973-ecc68ef1c4f7)
-</p>
+![image](https://github.com/user-attachments/assets/cca9440c-ed63-417f-b973-ecc68ef1c4f7)
 ---
 ## 🛠️ 사용 언어, 개발환경, 개발 툴
 
