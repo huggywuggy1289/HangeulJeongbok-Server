@@ -34,6 +34,7 @@
 ## 🛠️ 사용 언어, 개발환경, 개발 툴
 
 <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white">
+
 <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=React&logoColor=black"/>
 
 <br>
