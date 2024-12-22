@@ -1,4 +1,10 @@
 # HangeulJeongbok-Server
+<div align=center>
+  <h3>🦁 사(자들은)개(발을 멈추지않아)절 </h3>
+  <h3>2024 교내해커톤 사개절 : 한글정복 </h3> 
+   우수상(1등) 🏆
+</div>
+<p>
 
 ## 🚀 커밋 규칙 (Commit Convention)
 
@@ -18,5 +24,12 @@
 | `!BREAKING CHANGE`| 커다란 API 변경의 경우                                    |
 | `!HOTFIX`         | 급하게 치명적인 버그를 고쳐야 하는 경우                   |
 
+<h1>👨‍💻 Role & Contribution</h1>
+<hr>
+![image](https://github.com/user-attachments/assets/f33b1c43-bcce-4e1c-bae4-4aceea416a1a)
 ---
 ## 🛠️ 사용 언어, 개발환경, 개발 툴
+
+<img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white">
+<img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=React&logoColor=black"/>
+
