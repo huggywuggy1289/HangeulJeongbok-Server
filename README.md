@@ -4,7 +4,8 @@
   <h3>2024 교내해커톤 사개절 : 한글정복 </h3> 
    우수상(1등) 🏆
 </div>
-![image](https://github.com/user-attachments/assets/7d8f7ef8-f2aa-41b1-a9b7-2c0164eb9ab5)
+
+![1](https://github.com/user-attachments/assets/f29105ff-3361-4eda-a22c-5c3753fc61d9)
 
 <p>
 
