@@ -4,7 +4,7 @@
   <h3>2024 교내해커톤 사개절 : 한글정복 </h3> 
    우수상(1등) 🏆
 </div>
-
+<br>
 ![1](https://github.com/user-attachments/assets/f29105ff-3361-4eda-a22c-5c3753fc61d9)
 
 <p>
@@ -29,10 +29,16 @@
 
 <h1>👨‍💻 Role & Contribution</h1>
 <hr>
-![image](https://github.com/user-attachments/assets/cca9440c-ed63-417f-b973-ecc68ef1c4f7)
+![2](https://github.com/user-attachments/assets/13f4d64d-5a7c-48fa-a208-5309986c0d58)
 
 ## 🛠️ 사용 언어, 개발환경, 개발 툴
 
 <img src="https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white">
 <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=React&logoColor=black"/>
 
+<br>
+<p>
+![3](https://github.com/user-attachments/assets/0208a744-7681-46fd-8be4-0b02638fe117)
+![4](https://github.com/user-attachments/assets/1a4c5e04-72b9-46a8-aaa1-b2c04a213917)
+![5](https://github.com/user-attachments/assets/34d45910-f67a-4d3e-9fa9-8249eeb63eef)
+![6](https://github.com/user-attachments/assets/14adeb48-08e9-4a3f-8ffb-9de8b927f93b)
