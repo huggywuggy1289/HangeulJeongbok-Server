@@ -5,7 +5,8 @@
    우수상(1등) 🏆
 </div>
 <br>
-![1](https://github.com/user-attachments/assets/f29105ff-3361-4eda-a22c-5c3753fc61d9)
+
+![1](https://github.com/user-attachments/assets/af50fd99-dcd7-485a-995c-e3e754f89653)
 
 <p>
 
